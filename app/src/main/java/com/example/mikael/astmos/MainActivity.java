@@ -30,6 +30,7 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -67,6 +68,7 @@ public class MainActivity extends Activity implements LocationListener {
     TextView connDevice;
     Button startValueBtn;
     Button stopValueBtn;
+    Button shutdownPi;
 
     /* list and variable definitions */
     Set<BluetoothDevice> pairedDevices = null;
@@ -93,6 +95,22 @@ public class MainActivity extends Activity implements LocationListener {
 
         } catch (IOException e) {
             // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    public void sendCommand(String command) {
+        try {
+            btThread.interrupt();                       // terminate the bluetooth thread
+            recentValues.clear();                       // flush the buffer
+
+            OutputStream outputStream = mmSocket.getOutputStream();
+            outputStream.write(command.getBytes());
+            Log.d(TAG, "sendCommand: send shutdown command to rpi");
+            stopValueBtn.setVisibility(View.GONE);          // hide the stop button
+            startValueBtn.setVisibility(View.VISIBLE);      // make start button visible
+        } catch (IOException e) {
+            Log.d(TAG, "sendCommand: failed to send command to rpi");
             e.printStackTrace();
         }
     }
@@ -238,12 +256,13 @@ public class MainActivity extends Activity implements LocationListener {
         /* initialize the global variables defined earlier */
         handler = new Handler();
 
-        sensorType = findViewById(R.id.sensorType);
-        sensorValue = findViewById(R.id.sensorValue);
-        connDevice = findViewById(R.id.connectedDevice);
-        startValueBtn = findViewById(R.id.startValue);
-        stopValueBtn = findViewById(R.id.stopValue);
-        locationText = findViewById(R.id.locationText);
+        sensorType      = findViewById(R.id.sensorType);
+        sensorValue     = findViewById(R.id.sensorValue);
+        connDevice      = findViewById(R.id.connectedDevice);
+        startValueBtn   = findViewById(R.id.startValue);
+        stopValueBtn    = findViewById(R.id.stopValue);
+        shutdownPi      = findViewById(R.id.shutdownRPi);
+        locationText    = findViewById(R.id.locationText);
 
         currentLocation = new Coordinate();
 
@@ -283,6 +302,16 @@ public class MainActivity extends Activity implements LocationListener {
                 }
             }
         });
+
+        shutdownPi.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG, "onClick: shutdown rpi clicked");
+                sendCommand("shutdown");
+            }
+        });
+
+
 
         /* check if bluetooth is enabled on the device, of not prompt to enable it */
         if (!mBluetoothAdapter.isEnabled())
