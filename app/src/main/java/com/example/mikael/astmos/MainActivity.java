@@ -5,9 +5,11 @@ import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
@@ -273,6 +275,8 @@ public class MainActivity extends Activity implements LocationListener {
 
         initializeMqtt();               // initialize the mqtt connection and connect to a broker
 
+        getLocation();                  // register location updates when the device moves
+
         /* register onClick listener to the start receiving values button */
         startValueBtn.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -356,9 +360,39 @@ public class MainActivity extends Activity implements LocationListener {
                     break;  // done
                 }
             }
+            connDevice.setText("No connected device found");
         }
 
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+        this.registerReceiver(mReceiver, filter);
+
     }
+
+    //The BroadcastReceiver that listens for bluetooth broadcasts
+    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            switch (action) {
+                case BluetoothDevice.ACTION_FOUND:
+                    //Device found
+                    break;
+                case BluetoothAdapter.ACTION_DISCOVERY_FINISHED:
+                    //Done searching
+                    break;
+                case BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED:
+                    //Device is about to disconnect
+                    break;
+                case BluetoothDevice.ACTION_ACL_DISCONNECTED:
+                    //Device has disconnected
+                    Toast.makeText(getApplicationContext(), "BT Device Disconnected", Toast.LENGTH_LONG).show();
+                    break;
+            }
+        }
+    };
 
     /**
      * getLocation
@@ -421,14 +455,14 @@ public class MainActivity extends Activity implements LocationListener {
                                         sensorValue.setText("Sensor value: " + level + " µg/m3");
                                         //sensorValue.setText("Sensor value: " + res[1] + " ppb");
 
-                                        if (recentValues.size() == 5) {
+                                        /*if (recentValues.size() == 5) {
                                             // at half time check the current location
                                             getLocation();
-                                        }
+                                        }*/
 
                                         if (recentValues.size() == 10) {
                                             // get a more updated location before sending
-                                            getLocation();
+                                            //getLocation();
                                             if (currentLocation.latitude != 0.0 && currentLocation.longitude != 0.0) {
                                                 sendData(recentValues, currentLocation, res[3], res[4]);
                                             }
