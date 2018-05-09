@@ -66,6 +66,12 @@
                 android:layout_height="wrap_content"
                 android:text="Location: "
                 />
+            <TextView
+                android:id="@+id/latestSent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Latest sent message: "
+                android:layout_below="@id/locationText"/>
             <Button
                 android:id="@+id/shutdownRPi"
                 android:layout_width="wrap_content"

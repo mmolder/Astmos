@@ -33,7 +33,9 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -68,6 +70,7 @@ public class MainActivity extends Activity implements LocationListener {
     TextView sensorType;
     TextView sensorValue;
     TextView connDevice;
+    TextView latestMsg;
     Button startValueBtn;
     Button stopValueBtn;
     Button shutdownPi;
@@ -75,6 +78,7 @@ public class MainActivity extends Activity implements LocationListener {
     /* list and variable definitions */
     Set<BluetoothDevice> pairedDevices = null;
     ArrayList<Double> recentValues = new ArrayList<>();
+    ArrayList<String> timeStamps = new ArrayList<>();
     final byte delimiter = 33;
     int readBufferPosition = 0;
 
@@ -207,7 +211,7 @@ public class MainActivity extends Activity implements LocationListener {
      * @param time The time of the measurements
      * @param serialNr The serial number of the sensor used (used for unique sensor data message)
      */
-    private void sendData(ArrayList<Double> values, Coordinate coord, String time, String serialNr) {
+    private void sendData(ArrayList<Double> values, Coordinate coord, ArrayList<String> times, String serialNr) {
         // create JSon formatted message with all the data
         double average = 0.0;
         if (!values.isEmpty()) {
@@ -215,8 +219,15 @@ public class MainActivity extends Activity implements LocationListener {
                 average += value;
             }
             average = average/values.size();
+            String topic = "/observations/" + serialNr;
 
-            mqttHelper.publish(new JSonMessage(average, coord, time, serialNr).msg, "test");
+            String medianTime = times.get(times.size()/2);
+
+            mqttHelper.publish(new JSonMessage(average, coord, medianTime, serialNr).msg, topic);
+
+            latestMsg.setText("Latest message sent to topic: " + topic + ", with content; value: " + average + ", lat:" + coord.latitude
+             + ", lon: " + coord.longitude);
+
         }
 
     }
@@ -265,6 +276,7 @@ public class MainActivity extends Activity implements LocationListener {
         stopValueBtn    = findViewById(R.id.stopValue);
         shutdownPi      = findViewById(R.id.shutdownRPi);
         locationText    = findViewById(R.id.locationText);
+        latestMsg       = findViewById(R.id.latestSent);
 
         currentLocation = new Coordinate();
 
@@ -359,16 +371,19 @@ public class MainActivity extends Activity implements LocationListener {
                     connDevice.setText("Connected device: " + device.getName());
                     break;  // done
                 }
+                else {
+                    connDevice.setText("No connected device found");
+                }
             }
-            connDevice.setText("No connected device found");
         }
 
+        /*
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
         filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
         filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
         this.registerReceiver(mReceiver, filter);
-
+        */
     }
 
     //The BroadcastReceiver that listens for bluetooth broadcasts
@@ -464,11 +479,15 @@ public class MainActivity extends Activity implements LocationListener {
                                             // get a more updated location before sending
                                             //getLocation();
                                             if (currentLocation.latitude != 0.0 && currentLocation.longitude != 0.0) {
-                                                sendData(recentValues, currentLocation, res[3], res[4]);
+                                                sendData(recentValues, currentLocation, timeStamps, res[4]);
                                             }
                                             recentValues.clear();
+                                            timeStamps.clear();
                                         }
-                                        recentValues.add(level);
+                                        else {
+                                            recentValues.add(level);
+                                            timeStamps.add(new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(new Date()));
+                                        }
                                         //recentValues.add(Double.parseDouble(res[1]));
                                     }
                                 });
