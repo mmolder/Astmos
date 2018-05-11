@@ -8,14 +8,20 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingLeft="3dp"
+        android:paddingRight="3dp">
 
         <RelativeLayout
             android:id="@+id/relButtons"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:background="@drawable/background_boarder"
+            android:layout_marginBottom="5dp"
+            android:layout_marginTop="5dp"
+            android:paddingBottom="5dp">
 
             <TextView
                 android:id="@+id/sensorType"
@@ -24,6 +30,7 @@
                 android:textSize="20dp"
                 android:paddingTop="5dp"
                 android:paddingLeft="10dp"
+                android:paddingRight="10dp"
                 android:text="Connected sensor: "/>
             <TextView
                 android:id="@+id/sensorValue"
@@ -37,56 +44,75 @@
 
             <Button
                 android:id="@+id/startValue"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="180dp"
+                android:layout_height="60dp"
                 android:layout_centerHorizontal="true"
-                android:layout_marginTop="13dp"
                 android:text="Receive Values"
-                android:layout_below="@id/sensorValue"/>
+                android:layout_below="@id/sensorValue"
+                android:backgroundTint="@android:color/holo_green_light"/>
 
             <Button
                 android:id="@+id/stopValue"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="180dp"
+                android:layout_height="60dp"
                 android:layout_centerHorizontal="true"
-                android:layout_marginTop="13dp"
                 android:text="Stop"
                 android:visibility="gone"
-                android:layout_below="@id/sensorValue"/>
+                android:layout_below="@id/sensorValue"
+                android:backgroundTint="@android:color/holo_red_light"/>
 
 
         </RelativeLayout>
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_below="@+id/relButtons">
+            android:layout_height="330dp"
+            android:layout_below="@+id/relButtons"
+            android:background="@drawable/background_boarder"
+            android:id="@+id/location"
+            android:layout_marginBottom="5dp"
+            android:paddingTop="10dp">
             <TextView
                 android:id="@+id/locationText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Location: "
-                />
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp" />
             <TextView
                 android:id="@+id/latestSent"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Latest sent message: "
-                android:layout_below="@id/locationText"/>
+                android:layout_below="@id/locationText"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"/>
+
+
+        </RelativeLayout>
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/location"
+            android:background="@drawable/background_boarder"
+            android:id="@+id/info"
+            android:layout_marginBottom="5dp">
             <Button
                 android:id="@+id/shutdownRPi"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_above="@id/connectedDevice"
                 android:layout_centerHorizontal="true"
-                android:text="Shutdown AirPi"/>
+                android:text="Shutdown AirPi"
+                android:backgroundTint="@android:color/holo_red_light"/>
             <TextView
                 android:id="@+id/connectedDevice"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
+                android:layout_height="wrap_content"
                 android:layout_alignParentBottom="true"
                 android:textSize="20dp"
-                android:text="Connected device: "/>
-
+                android:text="Connected device: "
+                android:paddingBottom="5dp"
+                android:layout_marginLeft="10dp"/>
         </RelativeLayout>
     </RelativeLayout>
 
