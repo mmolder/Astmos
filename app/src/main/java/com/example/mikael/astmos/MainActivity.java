@@ -63,6 +63,7 @@ public class MainActivity extends Activity implements LocationListener {
     LocationManager locationManager;
     Thread btThread;
     Coordinate currentLocation;
+    Location oldLocation;
     Handler handler;
 
     /* textview and button definitions */
@@ -417,7 +418,7 @@ public class MainActivity extends Activity implements LocationListener {
     void getLocation() {
         try {
             locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 1, this);
         }
         catch(SecurityException e) {
             e.printStackTrace();
@@ -515,9 +516,18 @@ public class MainActivity extends Activity implements LocationListener {
      */
     @Override
     public void onLocationChanged(Location location) {
+
+        /* check if the new location is theoretically possible */
+        if(oldLocation != null) {
+            if (!isValidCoordinate(location, oldLocation)) {
+                return;
+            }
+        }
+
         locationText.setText("Latitude: " + location.getLatitude() + "\nLongitude: " + location.getLongitude());
         currentLocation.latitude = location.getLatitude();
         currentLocation.longitude = location.getLongitude();
+        oldLocation = location;
 
         try {
             Geocoder geocoder = new Geocoder(this, Locale.getDefault());
@@ -538,4 +548,16 @@ public class MainActivity extends Activity implements LocationListener {
 
     @Override
     public void onProviderEnabled(String provider) {}
+
+    private boolean isValidCoordinate(Location current, Location old) {
+        float distance = current.distanceTo(old);
+        double time = (double)(current.getElapsedRealtimeNanos() - old.getElapsedRealtimeNanos())/1000000000.0;
+        float speed = (current.getSpeed()+old.getSpeed())/2;
+        float theoreticTime = distance/speed;
+        // give some slack
+        if((time + 5.0) < theoreticTime) {
+            return false;
+        }
+        return true;
+    }
 }
