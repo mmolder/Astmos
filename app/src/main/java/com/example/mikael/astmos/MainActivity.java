@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Address;
+import android.location.Criteria;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
@@ -64,6 +65,7 @@ public class MainActivity extends Activity implements LocationListener {
     Thread btThread;
     Coordinate currentLocation;
     Location oldLocation;
+    Location oldTwo;
     Handler handler;
 
     /* textview and button definitions */
@@ -72,6 +74,7 @@ public class MainActivity extends Activity implements LocationListener {
     TextView sensorValue;
     TextView connDevice;
     TextView latestMsg;
+    TextView debug;
     Button startValueBtn;
     Button stopValueBtn;
     Button shutdownPi;
@@ -226,8 +229,8 @@ public class MainActivity extends Activity implements LocationListener {
 
             mqttHelper.publish(new JSonMessage(average, coord, medianTime, serialNr).msg, topic);
 
-            latestMsg.setText("Latest message sent to topic: " + topic + ", with content; value: " + average + ", lat:" + coord.latitude
-             + ", lon: " + coord.longitude);
+            latestMsg.setText("Latest message sent to topic: " + topic + ", with content;\nValue: " + average + "\nLat:" + coord.latitude
+             + "\nLon: " + coord.longitude);
 
         }
 
@@ -278,6 +281,7 @@ public class MainActivity extends Activity implements LocationListener {
         shutdownPi      = findViewById(R.id.shutdownRPi);
         locationText    = findViewById(R.id.locationText);
         latestMsg       = findViewById(R.id.latestSent);
+        debug           = findViewById(R.id.debug);
 
         currentLocation = new Coordinate();
 
@@ -418,7 +422,8 @@ public class MainActivity extends Activity implements LocationListener {
     void getLocation() {
         try {
             locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 1, this);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
         }
         catch(SecurityException e) {
             e.printStackTrace();
@@ -477,10 +482,11 @@ public class MainActivity extends Activity implements LocationListener {
                                         }*/
 
                                         if (recentValues.size() == 10) {
-                                            // get a more updated location before sending
-                                            //getLocation();
+                                            // only send of we have a location and if the new is not the same as previous
                                             if (currentLocation.latitude != 0.0 && currentLocation.longitude != 0.0) {
-                                                sendData(recentValues, currentLocation, timeStamps, res[4]);
+                                                //if (currentLocation.latitude != oldTwo.getLatitude() && currentLocation.longitude != oldTwo.getLongitude()) {
+                                                    sendData(recentValues, currentLocation, timeStamps, res[4]);
+                                                //}
                                             }
                                             recentValues.clear();
                                             timeStamps.clear();
@@ -518,15 +524,20 @@ public class MainActivity extends Activity implements LocationListener {
     public void onLocationChanged(Location location) {
 
         /* check if the new location is theoretically possible */
+        /*
         if(oldLocation != null) {
             if (!isValidCoordinate(location, oldLocation)) {
+                oldTwo = location;
+                debug.setText("DEBUG: Location update skipped");
                 return;
             }
         }
-
+        */
+        debug.setText("DEBUG\nSpeed: " + location.getSpeed());
         locationText.setText("Latitude: " + location.getLatitude() + "\nLongitude: " + location.getLongitude());
         currentLocation.latitude = location.getLatitude();
         currentLocation.longitude = location.getLongitude();
+        oldTwo = location;
         oldLocation = location;
 
         try {
@@ -555,7 +566,7 @@ public class MainActivity extends Activity implements LocationListener {
         float speed = (current.getSpeed()+old.getSpeed())/2;
         float theoreticTime = distance/speed;
         // give some slack
-        if((time + 5.0) < theoreticTime) {
+        if(time + 10.0 < theoreticTime) {
             return false;
         }
         return true;
