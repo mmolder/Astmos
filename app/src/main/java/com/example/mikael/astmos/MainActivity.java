@@ -153,25 +153,22 @@ public class MainActivity extends Activity implements LocationListener {
 
         switch (gas) {
             case "O3":
-                M = 47.998;
+                M = 2.00;
                 break;
             case "SO2":
-                M = 64.06;
+                M = 2.62;
                 break;
             case "NO2":
-                M = 46.0055;
+                M = 1.88;
                 break;
             case "CO":
-                M = 28.011;
-                break;
-            case "H2S":
-                M = 34.076;
+                M = 1.145;
                 break;
             default:
-                M = 0;
+                M = 1.00;
                 break;
         }
-        return ( ppb * 12.187 * M ) / ( 273.15 + temp );
+        return ppb/M;
     }
 
     /**
@@ -422,8 +419,8 @@ public class MainActivity extends Activity implements LocationListener {
     void getLocation() {
         try {
             locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 1, this);
+            //locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
         }
         catch(SecurityException e) {
             e.printStackTrace();
